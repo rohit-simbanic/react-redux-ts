@@ -1,8 +1,28 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import Sidebar from "../components/Sidebar/Sidebar";
+import { useAppDispatch, useAppSelector } from "../store/hooks/hooks";
+import { getHomePageVideos } from "../store/reducer/getHomePageVideos";
+import { clearVideos } from "../store";
+import { HomePageVideos } from "../Types/Types";
+import Spinner from "../components/Spinner/Spinner";
+import InfiniteScroll from "react-infinite-scroll-component";
+import Card from "../components/Cards/Card";
 
 const Home = () => {
+  const dispatch = useAppDispatch();
+  const videos = useAppSelector((state) => state.youtubeApp.videos);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearVideos());
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(getHomePageVideos(false));
+  }, [dispatch]);
+
   return (
     <div className="max-h-screen overflow-hidden">
       <div style={{ height: "7.5vh" }}>
@@ -10,6 +30,23 @@ const Home = () => {
       </div>
       <div className="flex" style={{ height: "92.5vh" }}>
         <Sidebar />
+        {videos.length ? (
+          <InfiniteScroll
+            dataLength={videos.length}
+            next={() => dispatch(getHomePageVideos(true))}
+            hasMore={videos.length < 500}
+            loader={<Spinner />}
+            height={650}
+          >
+            <div className="grid gap-y-14 gap-x-8 grid-cols-4 p-8">
+              {videos.map((item: HomePageVideos, index) => {
+                return <Card data={item} key={index} />;
+              })}
+            </div>
+          </InfiniteScroll>
+        ) : (
+          <Spinner />
+        )}
       </div>
     </div>
   );
